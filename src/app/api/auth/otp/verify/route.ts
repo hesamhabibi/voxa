@@ -3,7 +3,6 @@ import { normalizeIranianMobile } from "@/lib/phone"
 import { consumeOtp } from "@/server/auth/otp"
 import { createSession, sessionCookie } from "@/server/auth/session"
 import { membershipStore } from "@/server/membership/store"
-export const runtime = "nodejs"
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as { phone?: unknown; code?: unknown } | null
   const phone = typeof body?.phone === "string" ? normalizeIranianMobile(body.phone) : null

@@ -2,7 +2,6 @@ import { NextResponse } from "next/server"
 import { requireAdmin } from "@/server/auth/guard"
 import { membershipStore } from "@/server/membership/store"
 import type { MembershipUser } from "@/types/membership"
-export const runtime = "nodejs"
 export async function PATCH(request: Request, context: RouteContext<"/api/membership/users/[userId]">) {
   try {
     await requireAdmin(); const { userId } = await context.params
