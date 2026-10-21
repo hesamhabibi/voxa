@@ -1,6 +1,4 @@
-import "server-only"
-
-import { createHmac, timingSafeEqual } from "node:crypto"
+import { SignJWT, jwtVerify } from "jose"
 
 const SESSION_COOKIE = "voxa_session"
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7
@@ -13,23 +11,23 @@ function secret() {
   throw new Error("AUTH_SESSION_SECRET must be configured in production.")
 }
 
-function sign(payload: string) { return createHmac("sha256", secret()).update(payload).digest("base64url") }
+function signingKey() { return new TextEncoder().encode(secret()) }
 
-export function createSession(userId: string, roles: string[]) {
-  const payload: SessionPayload = { userId, roles, expiresAt: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS }
-  const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url")
-  return `${encoded}.${sign(encoded)}`
+export async function createSession(userId: string, roles: string[]) {
+  return new SignJWT({ roles })
+    .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+    .setSubject(userId)
+    .setIssuedAt()
+    .setExpirationTime(`${SESSION_TTL_SECONDS}s`)
+    .sign(signingKey())
 }
 
-export function readSession(value?: string): SessionPayload | null {
+export async function readSession(value?: string): Promise<SessionPayload | null> {
   if (!value) return null
-  const [encoded, signature] = value.split(".")
-  if (!encoded || !signature) return null
-  const expected = Buffer.from(sign(encoded)); const actual = Buffer.from(signature)
-  if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) return null
   try {
-    const payload = JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")) as SessionPayload
-    return payload.expiresAt > Math.floor(Date.now() / 1000) ? payload : null
+    const { payload } = await jwtVerify(value, signingKey(), { algorithms: ["HS256"] })
+    if (!payload.sub || !Array.isArray(payload.roles) || typeof payload.exp !== "number") return null
+    return { userId: payload.sub, roles: payload.roles.filter((role): role is string => typeof role === "string"), expiresAt: payload.exp }
   } catch { return null }
 }
 

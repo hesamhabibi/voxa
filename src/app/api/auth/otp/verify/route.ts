@@ -14,6 +14,6 @@ export async function POST(request: Request) {
   membershipStore.touchLogin(user.id)
   const roles = user.roleIds.map((id) => membershipStore.listRoles().find((role) => role.id === id)?.key).filter((role): role is string => Boolean(role))
   const response = NextResponse.json({ user: { id: user.id, fullName: user.fullName, roles } })
-  response.cookies.set(sessionCookie.name, createSession(user.id, roles), sessionCookie.options)
+  response.cookies.set(sessionCookie.name, await createSession(user.id, roles), sessionCookie.options)
   return response
 }
