@@ -1,25 +1,44 @@
-import { Icon } from "@iconify/react"
+import { BookOpenCheck, LineChart, MessagesSquare, ShieldCheck } from "lucide-react"
 
 import { LoginForm } from "@/features/auth/login-form"
 
+const features = [
+  { icon: BookOpenCheck, title: "برنامهٔ شخصی", text: "تمرین‌ها متناسب با سطح و هدف تو" },
+  { icon: LineChart, title: "پیشرفت قابل‌اندازه‌گیری", text: "رشد مهارت‌ها را روز به روز ببین" },
+  { icon: ShieldCheck, title: "ورود امن بدون رمز", text: "فقط با کد یک‌بارمصرف پیامکی" },
+]
+
 export default function LoginPage() {
-  return <main className="relative min-h-[100dvh] overflow-hidden bg-[#f6f9fc] px-4 py-5 sm:p-7">
-    <div className="pointer-events-none absolute -end-48 -top-52 size-[34rem] rounded-full bg-sky-200/55 blur-3xl" />
-    <div className="pointer-events-none absolute -bottom-64 -start-48 size-[34rem] rounded-full bg-indigo-100/70 blur-3xl" />
-    <div className="relative mx-auto grid min-h-[calc(100dvh-2.5rem)] w-full max-w-6xl overflow-hidden rounded-[2rem] border border-white/80 bg-white shadow-2xl shadow-slate-900/10 lg:min-h-[min(44rem,calc(100dvh-3.5rem))] lg:grid-cols-[1.08fr_0.92fr]">
-      <section className="relative hidden overflow-hidden bg-slate-950 p-10 text-white lg:flex lg:flex-col">
-        <div className="pointer-events-none absolute -start-28 top-16 size-96 rounded-full bg-sky-400/20 blur-3xl" /><div className="pointer-events-none absolute -end-20 bottom-0 size-96 rounded-full bg-indigo-500/25 blur-3xl" />
-        <div className="relative flex items-center gap-3"><span className="grid size-11 place-items-center rounded-2xl bg-white text-sky-600"><Icon icon="solar:chat-round-dots-bold" className="size-6" /></span><span dir="ltr" className="text-xl font-black tracking-tight">Voxa</span></div>
-        <div className="relative my-auto max-w-md"><span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-semibold text-sky-200"><span className="size-1.5 rounded-full bg-emerald-400" />فضای یادگیری شخصی</span><h1 className="mt-6 text-4xl font-black leading-[1.35] tracking-tight">یادگیریِ پیوسته،<br />در ریتم خودت.</h1><p className="mt-5 text-sm leading-7 text-slate-300">واژه‌ها، تمرین‌ها و مسیر رشد زبانت را در یک فضای آرام و منظم دنبال کن.</p></div>
-        <div className="relative grid grid-cols-3 gap-3"><Feature icon="solar:book-bookmark-linear" label="برنامهٔ شخصی" /><Feature icon="solar:chart-square-linear" label="رشد قابل‌پیگیری" /><Feature icon="solar:shield-check-linear" label="ورود امن" /></div>
-      </section>
-      <section className="safe-top safe-bottom flex items-center px-5 py-10 sm:px-10 lg:px-14">
-        <div className="mx-auto w-full max-w-sm"><div className="mb-10 flex items-center justify-between lg:hidden"><span className="flex items-center gap-2"><span className="grid size-10 place-items-center rounded-2xl bg-slate-950 text-white"><Icon icon="solar:chat-round-dots-bold" className="size-5" /></span><span dir="ltr" className="text-lg font-black text-slate-900">Voxa</span></span><span className="text-xs font-semibold text-slate-400">فضای یادگیری</span></div><LoginForm /><p className="mt-8 text-center text-xs leading-6 text-slate-400">با ادامهٔ ورود، قوانین استفاده و حریم خصوصی Voxa را می‌پذیری.</p></div>
-      </section>
-    </div>
+  return <main className="grid min-h-dvh bg-background lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+    <section className="safe-top safe-bottom flex flex-col px-5 py-6 sm:px-8">
+      <Brand />
+      <div className="flex flex-1 items-center justify-center py-10">
+        <div className="w-full max-w-[22rem]"><LoginForm /></div>
+      </div>
+      <p className="text-center text-[11px] leading-5 text-muted-foreground">ورود به معنی پذیرش قوانین و حریم خصوصی Voxa است.</p>
+    </section>
+
+    <aside className="relative m-3 hidden overflow-hidden rounded-2xl bg-primary text-primary-foreground lg:flex lg:flex-col lg:justify-between lg:p-10">
+      <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.12] [background-image:linear-gradient(to_right,currentColor_1px,transparent_1px),linear-gradient(to_bottom,currentColor_1px,transparent_1px)] [background-size:32px_32px] [mask-image:radial-gradient(ellipse_at_top_left,black,transparent_70%)]" />
+      <div aria-hidden className="pointer-events-none absolute -bottom-32 -start-32 size-96 rounded-full bg-white/10 blur-3xl" />
+      <span className="relative inline-flex w-fit items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium ring-1 ring-white/15"><span className="size-1.5 rounded-full bg-emerald-300" />فضای یادگیری زبان</span>
+      <div className="relative max-w-md">
+        <h2 className="text-3xl font-bold leading-[1.5]">انگلیسی را هر روز،<br />کمی بهتر صحبت کن.</h2>
+        <p className="mt-3 text-sm leading-7 text-primary-foreground/75">واژه‌ها، تمرین‌های گفتاری و مسیر پیشرفتت، همه در یک‌جا.</p>
+      </div>
+      <ul className="relative grid gap-2.5">
+        {features.map(({ icon: Icon, title, text }) => <li key={title} className="flex items-center gap-3 rounded-xl bg-white/[0.07] p-3 ring-1 ring-white/10 backdrop-blur-sm">
+          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-white/15"><Icon className="size-4" /></span>
+          <span><span className="block text-[13px] font-semibold">{title}</span><span className="block text-xs text-primary-foreground/65">{text}</span></span>
+        </li>)}
+      </ul>
+    </aside>
   </main>
 }
 
-function Feature({ icon, label }: { icon: string; label: string }) {
-  return <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3"><Icon icon={icon} className="size-5 text-sky-300" /><p className="mt-3 text-xs font-bold text-slate-200">{label}</p></div>
+function Brand() {
+  return <div className="flex items-center gap-2">
+    <span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground"><MessagesSquare className="size-4" /></span>
+    <span dir="ltr" className="text-base font-bold tracking-tight">Voxa</span>
+  </div>
 }

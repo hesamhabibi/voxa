@@ -51,6 +51,12 @@ export const membershipRepository = {
     })
     return user ? mapUser(user) : null
   },
+  async createUser(input: Pick<MembershipUser, "fullName" | "phone" | "roleIds">) {
+    if (await prisma.user.findUnique({ where: { phone: input.phone }, select: { id: true } })) return null
+    const roleIds = (await prisma.role.findMany({ where: { id: { in: input.roleIds } }, select: { id: true } })).map((role) => role.id)
+    const user = await prisma.user.create({ data: { phone: input.phone, fullName: input.fullName, roles: { create: roleIds.map((roleId) => ({ roleId })) } }, include: { roles: { include: { role: true } } } })
+    return mapUser(user)
+  },
   async createRole(input: Pick<MembershipRole, "name" | "description">) {
     const key = `custom-${input.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-") || "role"}-${crypto.randomUUID().slice(0, 8)}`
     return mapRole(await prisma.role.create({ data: { key, name: input.name.trim(), description: input.description.trim() } }))

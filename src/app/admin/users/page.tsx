@@ -1,5 +1,5 @@
-import { AdminDashboard } from "@/features/membership/admin-dashboard"
+import { AdminUsers } from "@/features/membership/admin-users"
 
 export default function UsersAdminPage() {
-  return <AdminDashboard view="users" />
+  return <AdminUsers />
 }
