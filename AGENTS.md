@@ -13,3 +13,14 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 Voxa is a personal project. All commits and pushes for this repository must use
 the personal GitHub account **hesamhabibi** and its associated credentials. Do
 not use the company account **hesam-mas** for this repository.
+
+## Delivery rule
+
+Never push to GitHub automatically. A push is permitted only when the user
+explicitly asks to push the current work in that turn.
+
+## Mobile delivery
+
+Voxa must remain compatible with Capacitor. New UI and APIs must work in a
+responsive browser and avoid web-only assumptions that prevent a native mobile
+shell from consuming the same backend.
