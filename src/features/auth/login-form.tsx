@@ -20,37 +20,41 @@ export function LoginForm() {
   const router = useRouter()
 
   async function requestCode() {
+    if (!phone.trim() || busy) return
     setBusy(true)
-    const response = await fetch("/api/auth/otp/request", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone }) })
-    const data = await readApiResponse<{ debugCode?: string }>(response)
-    setBusy(false)
-    if (!response.ok) return notify.error(data.message ?? "دریافت کد ورود ممکن نشد.")
-    // Deliberately available during the no-SMS test phase only.
-    console.info("%c VOXA TEST OTP ", "background:#1f2937;color:#fff;padding:4px 8px;border-radius:4px", data.debugCode)
-    setCode("")
-    setStep("code")
-    notify.success("کد ورود ارسال شد.")
+    try {
+      const response = await fetch("/api/auth/otp/request", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone }) })
+      const data = await readApiResponse<{ debugCode?: string }>(response)
+      if (!response.ok) return notify.error(data.message ?? "دریافت کد ورود ممکن نشد.")
+      // The test-only OTP must remain visible in the browser console until an SMS provider is connected.
+      console.info("%c VOXA TEST OTP ", "background:#0f172a;color:#e0f2fe;padding:5px 10px;border-radius:999px;font-weight:700", data.debugCode)
+      setCode(""); setStep("code"); notify.success("کد ورود ارسال شد.")
+    } catch { notify.error("ارتباط با سرویس ورود برقرار نشد.") }
+    finally { setBusy(false) }
   }
 
   async function verifyCode(enteredCode = code) {
     if (busy || enteredCode.length !== 6) return
     setBusy(true)
-    const response = await fetch("/api/auth/otp/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone, code: enteredCode }) })
-    const data = await readApiResponse<{ user?: { roles: string[] } }>(response)
-    setBusy(false)
-    if (!response.ok) return notify.error(data.message ?? "ورود ممکن نشد.")
-    router.replace(data.user?.roles.includes("admin") ? "/admin/users" : "/")
-    router.refresh()
+    try {
+      const response = await fetch("/api/auth/otp/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone, code: enteredCode }) })
+      const data = await readApiResponse<{ user?: { roles: string[] } }>(response)
+      if (!response.ok) return notify.error(data.message ?? "ورود ممکن نشد.")
+      router.replace(data.user?.roles.includes("admin") ? "/admin" : "/")
+      router.refresh()
+    } catch { notify.error("ارتباط با سرویس ورود برقرار نشد.") }
+    finally { setBusy(false) }
   }
 
-  return <div className="mx-auto w-full max-w-md overflow-hidden rounded-[2rem] border border-white/60 bg-card/95 shadow-2xl shadow-primary/10 backdrop-blur dark:border-white/10">
-    <div className="relative overflow-hidden bg-primary px-6 pb-14 pt-8 text-primary-foreground sm:px-8">
-      <div className="absolute -end-12 -top-16 size-44 rounded-full bg-white/10" /><div className="absolute -bottom-20 start-8 size-40 rounded-full bg-white/10" />
-      <div className="relative flex items-center justify-between"><span className="grid size-12 place-items-center rounded-2xl bg-white/15"><Icon icon="solar:chat-round-dots-bold" className="size-6" /></span><span dir="ltr" className="text-xl font-bold tracking-tight">Voxa</span></div>
-      <div className="relative mt-10"><p className="text-sm text-primary-foreground/70">فضای شخصی یادگیری زبان</p><h1 className="mt-2 text-2xl font-bold">خوش آمدی</h1></div>
-    </div>
-    <div className="-mt-6 rounded-t-[2rem] bg-card px-6 pb-7 pt-7 sm:px-8">
-      {step === "phone" ? <div className="space-y-6"><div><h2 className="font-semibold">شمارهٔ موبایل</h2><p className="mt-1 text-sm leading-6 text-muted-foreground">کد ورود را برای ادامه دریافت کن.</p></div><div className="space-y-2"><label htmlFor="phone" className="text-sm font-medium">موبایل</label><div className="relative"><Icon icon="solar:phone-linear" className="pointer-events-none absolute start-3 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" /><Input id="phone" inputMode="tel" dir="ltr" className="h-12 ps-11" placeholder="0912 123 4567" value={phone} onChange={(event) => setPhone(event.target.value)} /></div></div><Button className="h-12 w-full" size="lg" disabled={busy || !phone.trim()} onClick={requestCode}>{busy ? "در حال ارسال…" : "دریافت کد ورود"}<Icon icon="solar:arrow-left-linear" /></Button></div> : <div className="space-y-6"><div className="flex items-start justify-between gap-3"><div><h2 className="font-semibold">کد ورود را وارد کن</h2><p dir="ltr" className="mt-1 text-sm text-muted-foreground">{phone}</p></div><button className="rounded-lg px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" onClick={() => setStep("phone")}>تغییر شماره</button></div><OtpInput value={code} onChange={setCode} onComplete={verifyCode} disabled={busy} /><Button className="h-12 w-full" size="lg" disabled={busy || code.length !== 6} onClick={() => verifyCode()}>{busy ? "در حال بررسی…" : "ورود"}<Icon icon="solar:login-3-linear" /></Button></div>}
-    </div>
+  return <div className="w-full">
+    {step === "phone" ? <div className="space-y-7">
+      <div><span className="inline-flex size-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-600"><Icon icon="solar:phone-calling-rounded-bold-duotone" className="size-5" /></span><h1 className="mt-5 text-2xl font-black tracking-tight text-slate-900">ورود به Voxa</h1><p className="mt-2 text-sm leading-6 text-slate-500">شمارهٔ موبایل خودت را وارد کن؛ کد ورود برای ادامه ارسال می‌شود.</p></div>
+      <div className="space-y-2.5"><label htmlFor="phone" className="text-sm font-bold text-slate-700">شمارهٔ موبایل</label><div className="relative"><Icon icon="solar:phone-linear" className="pointer-events-none absolute start-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" /><Input id="phone" inputMode="tel" autoComplete="tel" dir="ltr" className="h-[3.25rem] rounded-2xl border-slate-200 bg-slate-50 ps-12 text-left text-base shadow-none placeholder:text-slate-300 focus-visible:bg-white" placeholder="0912 123 4567" value={phone} onChange={(event) => setPhone(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void requestCode() }} /></div></div>
+      <Button className="h-[3.25rem] w-full rounded-2xl bg-sky-600 text-sm font-bold shadow-lg shadow-sky-600/20 hover:bg-sky-700" size="lg" disabled={busy || !phone.trim()} onClick={requestCode}>{busy ? <><Icon icon="solar:refresh-circle-linear" className="size-5 animate-spin" />در حال ارسال…</> : <><span>دریافت کد ورود</span><Icon icon="solar:arrow-left-linear" className="size-5" /></>}</Button>
+    </div> : <div className="space-y-7">
+      <div className="flex items-start justify-between gap-3"><div><span className="inline-flex size-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600"><Icon icon="solar:letter-opened-bold-duotone" className="size-5" /></span><h1 className="mt-5 text-2xl font-black tracking-tight text-slate-900">کد تأیید را وارد کن</h1><p dir="ltr" className="mt-2 text-sm font-medium tracking-wide text-slate-500">{phone}</p></div><button type="button" className="mt-1 rounded-xl px-3 py-2 text-xs font-bold text-sky-700 transition hover:bg-sky-50" onClick={() => { setCode(""); setStep("phone") }}>تغییر شماره</button></div>
+      <div className="space-y-3"><p className="text-sm leading-6 text-slate-500">کد شش‌رقمی را وارد کن؛ بعد از رقم آخر، ورود به‌صورت خودکار انجام می‌شود.</p><OtpInput value={code} onChange={setCode} onComplete={verifyCode} disabled={busy} /></div>
+      <Button className="h-[3.25rem] w-full rounded-2xl bg-sky-600 text-sm font-bold shadow-lg shadow-sky-600/20 hover:bg-sky-700" size="lg" disabled={busy || code.length !== 6} onClick={() => void verifyCode()}>{busy ? <><Icon icon="solar:refresh-circle-linear" className="size-5 animate-spin" />در حال بررسی…</> : <><span>ورود</span><Icon icon="solar:login-3-linear" className="size-5" /></>}</Button>
+    </div>}
   </div>
 }
