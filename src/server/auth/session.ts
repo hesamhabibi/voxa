@@ -7,6 +7,12 @@ export interface SessionPayload { userId: string; roles: string[]; expiresAt: nu
 
 function secret() {
   if (process.env.AUTH_SESSION_SECRET) return process.env.AUTH_SESSION_SECRET
+  // During the explicit no-SMS test phase, Vercel's database URL is a
+  // server-only, high-entropy fallback. Set AUTH_SESSION_SECRET before launch.
+  if (process.env.OTP_TEST_MODE !== "false") {
+    const databaseSecret = process.env.POSTGRES_URL ?? process.env.DATABASE_URL ?? process.env.PRISMA_DATABASE_URL
+    if (databaseSecret) return databaseSecret
+  }
   if (process.env.NODE_ENV !== "production") return "voxa-development-only-change-this-secret"
   throw new Error("AUTH_SESSION_SECRET must be configured in production.")
 }

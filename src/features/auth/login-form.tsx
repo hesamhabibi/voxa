@@ -8,6 +8,7 @@ import { notify } from "@/components/feedback/notify"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { OtpInput } from "@/components/ui/otp-input"
+import { readApiResponse } from "@/lib/api-client"
 
 type Step = "phone" | "code"
 
@@ -21,9 +22,9 @@ export function LoginForm() {
   async function requestCode() {
     setBusy(true)
     const response = await fetch("/api/auth/otp/request", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone }) })
-    const data = await response.json()
+    const data = await readApiResponse<{ debugCode?: string }>(response)
     setBusy(false)
-    if (!response.ok) return notify.error(data.message)
+    if (!response.ok) return notify.error(data.message ?? "دریافت کد ورود ممکن نشد.")
     // Deliberately available during the no-SMS test phase only.
     console.info("%c VOXA TEST OTP ", "background:#1f2937;color:#fff;padding:4px 8px;border-radius:4px", data.debugCode)
     setCode("")
@@ -35,14 +36,14 @@ export function LoginForm() {
     if (busy || enteredCode.length !== 6) return
     setBusy(true)
     const response = await fetch("/api/auth/otp/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone, code: enteredCode }) })
-    const data = await response.json()
+    const data = await readApiResponse<{ user?: { roles: string[] } }>(response)
     setBusy(false)
-    if (!response.ok) return notify.error(data.message)
-    router.replace(data.user.roles.includes("admin") ? "/admin/users" : "/")
+    if (!response.ok) return notify.error(data.message ?? "ورود ممکن نشد.")
+    router.replace(data.user?.roles.includes("admin") ? "/admin/users" : "/")
     router.refresh()
   }
 
-  return <div className="w-full max-w-md overflow-hidden rounded-[2rem] border border-white/60 bg-card/95 shadow-2xl shadow-primary/10 backdrop-blur dark:border-white/10">
+  return <div className="mx-auto w-full max-w-md overflow-hidden rounded-[2rem] border border-white/60 bg-card/95 shadow-2xl shadow-primary/10 backdrop-blur dark:border-white/10">
     <div className="relative overflow-hidden bg-primary px-6 pb-14 pt-8 text-primary-foreground sm:px-8">
       <div className="absolute -end-12 -top-16 size-44 rounded-full bg-white/10" /><div className="absolute -bottom-20 start-8 size-40 rounded-full bg-white/10" />
       <div className="relative flex items-center justify-between"><span className="grid size-12 place-items-center rounded-2xl bg-white/15"><Icon icon="solar:chat-round-dots-bold" className="size-6" /></span><span dir="ltr" className="text-xl font-bold tracking-tight">Voxa</span></div>
